@@ -158,7 +158,8 @@ class NoteServiceImplTest {
     void updateUnknownIdThrowsNotFoundAndDoesNotSave() {
         when(repository.findById(UNKNOWN_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.update(UNKNOWN_ID, "New title", "New content", Set.of("work")))
+        Set<String> tags = Set.of("work");
+        assertThatThrownBy(() -> service.update(UNKNOWN_ID, "New title", "New content", tags))
                 .isInstanceOf(NoteNotFoundException.class);
 
         verify(repository, never()).save(any(Note.class));

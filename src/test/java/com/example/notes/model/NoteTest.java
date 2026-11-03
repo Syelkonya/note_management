@@ -40,7 +40,8 @@ class NoteTest {
         source.add("later");
 
         assertThat(note.tags()).containsExactly("work", "personal");
-        assertThatThrownBy(() -> note.tags().add("other"))
+        Set<String> tags = note.tags();
+        assertThatThrownBy(() -> tags.add("other"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 }

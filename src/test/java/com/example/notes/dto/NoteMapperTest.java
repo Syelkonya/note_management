@@ -40,7 +40,8 @@ class NoteMapperTest {
         assertThat(response.content()).isEqualTo("Content");
         assertThat(response.createdAt()).isEqualTo(CREATED_AT);
         assertThat(response.tags()).containsExactlyInAnyOrder("work", "home");
-        assertThatThrownBy(() -> response.tags().add("other"))
+        Set<String> tags = response.tags();
+        assertThatThrownBy(() -> tags.add("other"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
