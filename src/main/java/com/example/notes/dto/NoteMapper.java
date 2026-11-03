@@ -13,10 +13,17 @@ public final class NoteMapper {
     }
 
     public static NoteResponse toResponse(Note note) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new NoteResponse(
+                note.id(),
+                note.title(),
+                note.content(),
+                note.createdAt(),
+                note.tags());
     }
 
     public static List<NoteResponse> toResponse(List<Note> notes) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return notes.stream()
+                .map(NoteMapper::toResponse)
+                .toList();
     }
 }
