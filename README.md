@@ -19,14 +19,18 @@ filtering and deleting notes.
 
 ## Stack
 
-| Layer            | Choice                                                        |
-|------------------|---------------------------------------------------------------|
-| Language         | Java 17                                                       |
-| Framework        | Spring Boot 3.5.16 (Spring Web MVC, Bean Validation, Jackson)  |
-| Build            | Maven via the bundled Maven Wrapper (`mvnw` / `mvnw.cmd`)     |
-| Tests            | JUnit 5 + Spring Boot Test / MockMvc                          |
-| Storage          | In-memory repository (`ConcurrentHashMap`-backed)             |
-| Container        | Multi-stage Docker image, `eclipse-temurin:17-jre-alpine`     |
+| Layer            | Choice                                                          |
+|------------------|-----------------------------------------------------------------|
+| Language         | Java 17                                                         |
+| Framework        | Spring Boot 3.5.16 (Spring Web MVC, Bean Validation, Jackson)   |
+| Build            | Maven via the bundled Maven Wrapper (`mvnw` / `mvnw.cmd`)       |
+| Tests            | JUnit 5 + Mockito + Spring Boot Test / MockMvc                  |
+| Storage          | In-memory repository (`ConcurrentHashMap`-backed)               |
+| Boilerplate      | Lombok — `@RequiredArgsConstructor`, `@Getter`, `@UtilityClass` |
+| Container        | Multi-stage Docker image, `eclipse-temurin:17-jre-alpine`       |
+
+Lombok is a compile-time-only dependency: it generates the boilerplate while the code is
+compiled, has no runtime footprint and is excluded from the executable fat jar.
 
 ## Requirements
 
@@ -80,13 +84,13 @@ build output is not sent to the daemon.
 
 ```bash
 # Build the image
-docker build -t notes-service:latest .
+docker build -t note-management-app:latest .
 
 # Run the container (foreground; Ctrl+C to stop)
-docker run --rm -p 8080:8080 notes-service:latest
+docker run --rm -p 8080:8080 note-management-app:latest
 
 # Run in the background with a custom port mapping
-docker run -d --name notes-service -p 8080:8080 notes-service:latest
+docker run -d --name note-management-app -p 8080:8080 note-management-app:latest
 ```
 
 The API is then available at <http://localhost:8080/notes>. The first `docker build` needs
@@ -235,7 +239,7 @@ Clients should rely on `status` first; `title`/`detail` are human-readable.
 ## Project structure
 
 ```
-notes-service/
+note_management/                            # repository root
 ├── .mvn/wrapper/maven-wrapper.properties   # Maven Wrapper configuration
 ├── mvnw                                    # Maven Wrapper (Linux/macOS)
 ├── mvnw.cmd                                # Maven Wrapper (Windows)
