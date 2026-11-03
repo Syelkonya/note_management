@@ -13,20 +13,18 @@ import com.example.notes.exception.NoteNotFoundException;
 import com.example.notes.model.Note;
 import com.example.notes.repository.NoteRepository;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * Default {@link NoteService}. Depends only on the {@link NoteRepository}
  * interface for storage and on a {@link Clock} for server-owned timestamps.
  */
 @Service
+@RequiredArgsConstructor
 public class NoteServiceImpl implements NoteService {
 
     private final NoteRepository repository;
     private final Clock clock;
-
-    public NoteServiceImpl(NoteRepository repository, Clock clock) {
-        this.repository = repository;
-        this.clock = clock;
-    }
 
     @Override
     public Note create(String title, String content, Set<String> tags) {

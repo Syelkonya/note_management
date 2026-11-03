@@ -21,6 +21,7 @@ import com.example.notes.dto.NoteResponse;
 import com.example.notes.service.NoteService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Thin REST controller for the Notes API: delegates all behaviour to
@@ -28,15 +29,12 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/notes")
+@RequiredArgsConstructor
 public class NoteController {
 
     private static final String NOTES_PATH = "/notes/";
 
     private final NoteService noteService;
-
-    public NoteController(NoteService noteService) {
-        this.noteService = noteService;
-    }
 
     @PostMapping
     public ResponseEntity<NoteResponse> create(@Valid @RequestBody NoteRequest request) {

@@ -4,13 +4,13 @@ import java.util.List;
 
 import com.example.notes.model.Note;
 
+import lombok.experimental.UtilityClass;
+
 /**
  * Maps domain {@link Note} objects to transport DTOs.
  */
-public final class NoteMapper {
-
-    private NoteMapper() {
-    }
+@UtilityClass
+public class NoteMapper {
 
     public static NoteResponse toResponse(Note note) {
         return new NoteResponse(
