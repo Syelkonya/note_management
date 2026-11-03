@@ -1,0 +1,32 @@
+# Build output
+target
+
+# Version control
+.git
+.gitignore
+
+# IDE / editor
+.idea
+.vscode
+*.iml
+
+# Documentation (not needed to build the image)
+README.md
+
+# Logs
+logs
+*.log
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Local environment / secrets
+.env
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+
+# NOTE: .mvn and mvnw must stay in the build context - the builder image uses
+# the Maven wrapper to resolve dependencies and package the application.
