@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +71,7 @@ class NoteControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY))
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/notes/" + NOTE_ID))
+                .andExpect(header().string("Location", Matchers.endsWith("/notes/" + NOTE_ID)))
                 .andExpect(jsonPath("$.id").value(NOTE_ID.toString()));
 
         verify(noteService).create("My note", "Body", Set.of("work"));

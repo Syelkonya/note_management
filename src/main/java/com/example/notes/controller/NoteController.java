@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.example.notes.dto.NoteMapper;
 import com.example.notes.dto.NoteRequest;
@@ -32,15 +33,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NoteController {
 
-    private static final String NOTES_PATH = "/notes/";
-
     private final NoteService noteService;
 
     @PostMapping
     public ResponseEntity<NoteResponse> create(@Valid @RequestBody NoteRequest request) {
         NoteResponse created = NoteMapper.toResponse(
                 noteService.create(request.title(), request.content(), request.tags()));
-        return ResponseEntity.created(URI.create(NOTES_PATH + created.id())).body(created);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.id())
+                .toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     @GetMapping
