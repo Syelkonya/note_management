@@ -262,6 +262,31 @@ note_management/                            # repository root
 └── target/                                     # Build output (git-ignored, docker-ignored)
 ```
 
+## Quality gates
+
+`mvn verify` runs the tests plus the static-analysis gates below; any finding fails the build:
+
+| Tool | Scope | Configuration |
+|------|-------|---------------|
+| Maven Enforcer | toolchain: Java ≥ 17, Maven ≥ 3.6.3, no duplicate dependency versions | `pom.xml` |
+| Checkstyle | imports, whitespace, line length (≤ 140), basic style rules | `config/checkstyle/checkstyle.xml` |
+| PMD | error-prone, best-practice and performance rules | `config/pmd/pmd-ruleset.xml` |
+| SpotBugs | bytecode bug patterns; `find-sec-bugs` adds security rules | `pom.xml` |
+| JaCoCo | coverage gate: ≥ 80 % lines and ≥ 60 % branches | `pom.xml` |
+
+```bash
+./mvnw clean verify              # tests + all gates above
+./mvnw -Psecurity verify         # additionally: OWASP Dependency-Check (NVD data set; first run is slow)
+```
+
+The `Dockerfile` is additionally validated with [hadolint](https://github.com/hadolint/hadolint) and the
+BuildKit build checks when changing the container setup:
+
+```bash
+docker run --rm -v "$PWD:/work" -w /work hadolint/hadolint:latest hadolint Dockerfile
+docker build --check .
+```
+
 ## Notes and limitations
 
 - **In-memory storage only**: all notes are lost on restart, and the service is not safe to
