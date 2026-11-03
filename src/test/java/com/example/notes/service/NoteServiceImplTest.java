@@ -3,6 +3,7 @@ package com.example.notes.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -182,5 +183,55 @@ class NoteServiceImplTest {
         service.delete(NOTE_ID);
 
         verify(repository).deleteById(NOTE_ID);
+    }
+
+    @Test
+    @DisplayName("listByTag with a null tag delegates to repository.findAll")
+    void listByTagNullDelegatesToFindAll() {
+        List<Note> notes = List.of(note(NOTE_ID, "Work note", "Content", NOW, "work"));
+        when(repository.findAll()).thenReturn(notes);
+
+        assertThat(service.listByTag(null)).containsExactlyElementsOf(notes);
+        verify(repository).findAll();
+        verify(repository, never()).findByTag(anyString());
+    }
+
+    @Test
+    @DisplayName("listByTag with a blank tag delegates to repository.findAll")
+    void listByTagBlankDelegatesToFindAll() {
+        List<Note> notes = List.of(note(NOTE_ID, "Work note", "Content", NOW, "work"));
+        when(repository.findAll()).thenReturn(notes);
+
+        assertThat(service.listByTag("   ")).containsExactlyElementsOf(notes);
+        verify(repository).findAll();
+        verify(repository, never()).findByTag(anyString());
+    }
+
+    @Test
+    @DisplayName("update normalizes tags (trim, lower-case, drop blanks and duplicates)")
+    void updateNormalizesTags() {
+        Note existing = note(NOTE_ID, "Old title", "Old content", NOW, "old");
+        when(repository.findById(NOTE_ID)).thenReturn(Optional.of(existing));
+        when(repository.save(any(Note.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Set<String> rawTags = new LinkedHashSet<>(
+                List.of("  Work ", "work", "", "   ", "PERSONAL", "personal"));
+
+        Note updated = service.update(NOTE_ID, "New title", "New content", rawTags);
+
+        assertThat(updated.tags()).containsExactly("work", "personal");
+        verify(repository).save(updated);
+    }
+
+    @Test
+    @DisplayName("update with null tags stores an empty set")
+    void updateWithNullTagsStoresEmptySet() {
+        Note existing = note(NOTE_ID, "Old title", "Old content", NOW, "old");
+        when(repository.findById(NOTE_ID)).thenReturn(Optional.of(existing));
+        when(repository.save(any(Note.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Note updated = service.update(NOTE_ID, "New title", "New content", null);
+
+        assertThat(updated.tags()).isEmpty();
+        verify(repository).save(updated);
     }
 }

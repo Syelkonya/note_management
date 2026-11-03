@@ -2,8 +2,10 @@ package com.example.notes.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -147,5 +149,28 @@ class InMemoryNoteRepositoryTest {
         repository.deleteById(NOTE_ID);
 
         assertThat(repository.existsById(NOTE_ID)).isFalse();
+    }
+
+    @Test
+    @DisplayName("findByTag with a null or blank query matches nothing")
+    void findByTagWithNullOrBlankQueryReturnsEmptyList() {
+        repository.save(note(NOTE_ID, "Work note", "content", "work"));
+
+        assertThat(repository.findByTag(null)).isEmpty();
+        assertThat(repository.findByTag("   ")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("findAll returns an immutable snapshot taken at call time")
+    void findAllReturnsImmutableSnapshot() {
+        Note first = note(NOTE_ID, "First", "First content", "work");
+        repository.save(first);
+
+        List<Note> snapshot = repository.findAll();
+        repository.save(note(OTHER_ID, "Second", "Second content"));
+
+        assertThat(snapshot).containsExactly(first);
+        assertThatThrownBy(() -> snapshot.add(first))
+                .isInstanceOf(UnsupportedOperationException.class);
     }
 }

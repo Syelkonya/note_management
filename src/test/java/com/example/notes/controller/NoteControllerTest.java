@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -187,5 +188,29 @@ class NoteControllerTest {
 
         mockMvc.perform(delete("/notes/" + NOTE_ID))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /notes with a blank tag lists all notes instead of filtering")
+    void listWithBlankTagListsAllNotes() throws Exception {
+        when(noteService.list()).thenReturn(List.of(note()));
+
+        mockMvc.perform(get("/notes").param("tag", "   "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(NOTE_ID.toString()));
+
+        verify(noteService).list();
+        verify(noteService, never()).listByTag(anyString());
+    }
+
+    @Test
+    @DisplayName("POST /notes with malformed JSON returns 400")
+    void postMalformedJsonReturns400() throws Exception {
+        mockMvc.perform(post("/notes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(noteService);
     }
 }
