@@ -23,16 +23,20 @@ RUN ./mvnw -B -DskipTests package
 # =============================================================================
 FROM eclipse-temurin:17-jre-alpine
 
-# Create an unprivileged system user and group for the application.
-RUN addgroup -S appgroup \
-    && adduser -S -G appgroup appuser
+# Create an unprivileged system user and group for the application. The
+# numeric UID/GID keeps the container portable (e.g. Kubernetes runAsNonRoot
+# can verify the ID without resolving names).
+RUN addgroup -S -g 10001 appgroup \
+    && adduser -S -u 10001 -G appgroup appuser
 
 WORKDIR /app
 
 # The Spring Boot Maven plugin produces exactly one executable jar in target/.
 COPY --from=build --chown=appuser:appgroup /workspace/target/*.jar /app/app.jar
 
-USER appuser
+# Run with the numeric UID/GID (kept in sync with the user created above) so
+# orchestrators can enforce non-root without resolving names.
+USER 10001:10001
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
