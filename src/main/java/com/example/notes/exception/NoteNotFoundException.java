@@ -10,6 +10,8 @@ import lombok.Getter;
 @Getter
 public class NoteNotFoundException extends RuntimeException {
 
+    private static final long serialVersionUID = 1L;
+
     private final UUID noteId;
 
     public NoteNotFoundException(UUID noteId) {

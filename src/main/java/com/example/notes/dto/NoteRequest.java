@@ -1,5 +1,7 @@
 package com.example.notes.dto;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import jakarta.validation.constraints.NotBlank;
@@ -18,4 +20,19 @@ public record NoteRequest(
         String content,
 
         Set<String> tags) {
+
+    public NoteRequest {
+        tags = tags == null
+                ? Set.of()
+                : Collections.unmodifiableSet(new LinkedHashSet<>(tags));
+    }
+
+    /**
+     * Returns an unmodifiable view of the tag set, never the mutable internal
+     * representation, so callers cannot change the request.
+     */
+    @Override
+    public Set<String> tags() {
+        return Collections.unmodifiableSet(tags);
+    }
 }

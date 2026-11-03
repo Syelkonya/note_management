@@ -22,4 +22,13 @@ public record Note(
                 ? Set.of()
                 : Collections.unmodifiableSet(new LinkedHashSet<>(tags));
     }
+
+    /**
+     * Returns an unmodifiable view of the tag set, never the mutable internal
+     * representation, so callers cannot change the note.
+     */
+    @Override
+    public Set<String> tags() {
+        return Collections.unmodifiableSet(tags);
+    }
 }

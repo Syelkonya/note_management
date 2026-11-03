@@ -33,6 +33,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NoteController {
 
+    private static final String ID_PATH = "/{id}";
+
     private final NoteService noteService;
 
     @PostMapping
@@ -40,7 +42,7 @@ public class NoteController {
         NoteResponse created = NoteMapper.toResponse(
                 noteService.create(request.title(), request.content(), request.tags()));
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
+                .path(ID_PATH)
                 .buildAndExpand(created.id())
                 .toUri();
         return ResponseEntity.created(location).body(created);
@@ -54,18 +56,18 @@ public class NoteController {
         return NoteMapper.toResponse(noteService.listByTag(tag));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(ID_PATH)
     public NoteResponse get(@PathVariable UUID id) {
         return NoteMapper.toResponse(noteService.get(id));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(ID_PATH)
     public NoteResponse update(@PathVariable UUID id, @Valid @RequestBody NoteRequest request) {
         return NoteMapper.toResponse(
                 noteService.update(id, request.title(), request.content(), request.tags()));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping(ID_PATH)
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         noteService.delete(id);
         return ResponseEntity.noContent().build();
