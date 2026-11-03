@@ -1,0 +1,5 @@
+# Keep the Maven wrapper scripts in the line endings their consumers expect:
+# the shell script is executed inside the Linux Docker build stage, the .cmd
+# variant is used on Windows.
+mvnw     text eol=lf
+mvnw.cmd text eol=crlf
