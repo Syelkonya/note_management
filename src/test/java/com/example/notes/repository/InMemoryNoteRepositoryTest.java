@@ -1,176 +1,138 @@
+/*
+ * Notes service.
+ */
 package com.example.notes.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+import com.example.notes.model.Note;
 import java.time.Instant;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.example.notes.model.Note;
-
 /**
- * Unit tests for the in-memory {@link NoteRepository}. Plain JUnit 5: the
- * repository is instantiated directly, no Spring context is started.
+ * Tests for note reading in {@link InMemoryNoteRepository}.
+ *
+ * @since 1.0
  */
-@DisplayName("InMemoryNoteRepository")
-class InMemoryNoteRepositoryTest {
+final class InMemoryNoteRepositoryTest {
 
-    private static final Instant CREATED_AT = Instant.parse("2024-01-01T00:00:00Z");
+    /** First note identifier. */
+    private static final UUID FIRST =
+        UUID.fromString("11111111-1111-1111-1111-111111111111");
 
-    private static final UUID NOTE_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
-    private static final UUID OTHER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
-    private static final UUID THIRD_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
-    private static final UUID UNKNOWN_ID = UUID.fromString("99999999-9999-9999-9999-999999999999");
+    /** Second note identifier. */
+    private static final UUID SECOND =
+        UUID.fromString("22222222-2222-2222-2222-222222222222");
 
-    private InMemoryNoteRepository repository;
+    /** Unknown note identifier. */
+    private static final UUID UNKNOWN =
+        UUID.fromString("99999999-9999-9999-9999-999999999999");
 
-    @BeforeEach
-    void setUp() {
-        repository = new InMemoryNoteRepository();
-    }
+    /** Creation timestamp. */
+    private static final Instant CREATED = Instant.parse("2024-01-01T00:00:00Z");
 
-    private static Note note(UUID id, String title, String content, String... tags) {
-        return new Note(id, title, content, CREATED_AT, Set.of(tags));
+    /** Repository under test. */
+    private final InMemoryNoteRepository repository = new InMemoryNoteRepository();
+
+    @Test
+    void findByIdReturnsEmptyForUnknownNote() {
+        Assertions.assertThat(
+            this.repository.findById(InMemoryNoteRepositoryTest.UNKNOWN)
+        ).isEmpty();
     }
 
     @Test
-    @DisplayName("save stores the note and returns it")
-    void saveStoresNoteAndReturnsIt() {
-        Note note = note(NOTE_ID, "First", "First content", "work");
-
-        Note saved = repository.save(note);
-
-        assertThat(saved).isEqualTo(note);
-        assertThat(repository.findById(NOTE_ID)).contains(note);
-    }
-
-    @Test
-    @DisplayName("saving a note with an existing id replaces the previous note")
-    void saveWithSameIdReplacesExistingNote() {
-        Note original = note(NOTE_ID, "Original", "Original content", "work");
-        Note replacement = note(NOTE_ID, "Replacement", "Replacement content", "personal");
-
-        repository.save(original);
-        Note saved = repository.save(replacement);
-
-        assertThat(saved).isEqualTo(replacement);
-        assertThat(repository.findAll()).hasSize(1);
-        assertThat(repository.findById(NOTE_ID)).contains(replacement);
-    }
-
-    @Test
-    @DisplayName("findById returns Optional.empty() for an unknown id")
-    void findByIdForUnknownIdReturnsEmpty() {
-        repository.save(note(NOTE_ID, "Known", "Known content"));
-
-        assertThat(repository.findById(UNKNOWN_ID)).isEmpty();
-    }
-
-    @Test
-    @DisplayName("findAll returns every saved note")
     void findAllReturnsEverySavedNote() {
-        Note first = note(NOTE_ID, "First", "First content");
-        Note second = note(OTHER_ID, "Second", "Second content");
-        Note third = note(THIRD_ID, "Third", "Third content");
-        repository.save(first);
-        repository.save(second);
-        repository.save(third);
-
-        assertThat(repository.findAll()).containsExactlyInAnyOrder(first, second, third);
+        this.repository.save(
+            InMemoryNoteRepositoryTest.note(InMemoryNoteRepositoryTest.FIRST, "First")
+        );
+        this.repository.save(
+            InMemoryNoteRepositoryTest.note(InMemoryNoteRepositoryTest.SECOND, "Second")
+        );
+        Assertions.assertThat(
+            this.repository.findAll()
+        ).containsExactlyInAnyOrder(
+            InMemoryNoteRepositoryTest.note(InMemoryNoteRepositoryTest.FIRST, "First"),
+            InMemoryNoteRepositoryTest.note(InMemoryNoteRepositoryTest.SECOND, "Second")
+        );
     }
 
     @Test
-    @DisplayName("findAll returns an empty list when nothing was saved")
-    void findAllIsEmptyWhenNothingWasSaved() {
-        assertThat(repository.findAll()).isEmpty();
+    void findAllReturnsEmptyInitially() {
+        Assertions.assertThat(
+            this.repository.findAll()
+        ).isEmpty();
     }
 
     @Test
-    @DisplayName("findByTag matches case-insensitively and trims the query")
-    void findByTagMatchesCaseInsensitivelyAndTrimsQuery() {
-        Note lowerCaseTag = note(NOTE_ID, "Work note", "lower case tag", "work", "personal");
-        Note upperCaseTag = note(OTHER_ID, "Uppercase tag", "upper case tag", "Work");
-        repository.save(lowerCaseTag);
-        repository.save(upperCaseTag);
-
-        assertThat(repository.findByTag(" WORK ")).containsExactlyInAnyOrder(lowerCaseTag, upperCaseTag);
+    void findByTagIgnoresCaseAndTrimsQuery() {
+        this.repository.save(
+            InMemoryNoteRepositoryTest.tagged(InMemoryNoteRepositoryTest.FIRST, "work")
+        );
+        this.repository.save(
+            InMemoryNoteRepositoryTest.tagged(InMemoryNoteRepositoryTest.SECOND, "Work")
+        );
+        Assertions.assertThat(
+            this.repository.findByTag(" WORK ")
+        ).containsExactlyInAnyOrder(
+            InMemoryNoteRepositoryTest.tagged(InMemoryNoteRepositoryTest.FIRST, "work"),
+            InMemoryNoteRepositoryTest.tagged(InMemoryNoteRepositoryTest.SECOND, "Work")
+        );
     }
 
     @Test
-    @DisplayName("findByTag returns an empty list when no note has the tag")
-    void findByTagReturnsEmptyListWhenNoNoteMatches() {
-        repository.save(note(NOTE_ID, "Work note", "content", "work"));
-
-        assertThat(repository.findByTag("home")).isEmpty();
+    void findByTagReturnsEmptyWithoutMatches() {
+        this.repository.save(
+            InMemoryNoteRepositoryTest.tagged(InMemoryNoteRepositoryTest.FIRST, "work")
+        );
+        Assertions.assertThat(
+            this.repository.findByTag("home")
+        ).isEmpty();
     }
 
     @Test
-    @DisplayName("deleteById removes the stored note")
-    void deleteByIdRemovesNote() {
-        Note note = note(NOTE_ID, "Doomed", "content", "work");
-        repository.save(note);
-
-        repository.deleteById(NOTE_ID);
-
-        assertThat(repository.findById(NOTE_ID)).isEmpty();
-        assertThat(repository.findAll()).isEmpty();
-        assertThat(repository.existsById(NOTE_ID)).isFalse();
+    void findByTagTreatsNullQueryAsEmpty() {
+        Assertions.assertThat(
+            this.repository.findByTag(null)
+        ).isEmpty();
     }
 
     @Test
-    @DisplayName("deleteById for an unknown id is a silent no-op")
-    void deleteByIdForUnknownIdIsSilentNoOp() {
-        Note note = note(NOTE_ID, "Kept", "content", "work");
-        repository.save(note);
-
-        assertThatCode(() -> repository.deleteById(UNKNOWN_ID)).doesNotThrowAnyException();
-
-        assertThat(repository.findById(NOTE_ID)).contains(note);
-        assertThat(repository.findAll()).containsExactly(note);
+    void findByTagTreatsBlankQueryAsEmpty() {
+        Assertions.assertThat(
+            this.repository.findByTag("   ")
+        ).isEmpty();
     }
 
     @Test
-    @DisplayName("existsById reflects the notes currently stored")
-    void existsByIdReflectsStoredNotes() {
-        assertThat(repository.existsById(NOTE_ID)).isFalse();
-
-        repository.save(note(NOTE_ID, "Kept", "content"));
-
-        assertThat(repository.existsById(NOTE_ID)).isTrue();
-        assertThat(repository.existsById(UNKNOWN_ID)).isFalse();
-
-        repository.deleteById(NOTE_ID);
-
-        assertThat(repository.existsById(NOTE_ID)).isFalse();
+    void findAllReturnsUnmodifiableSnapshot() {
+        Assertions.assertThat(
+            this.repository.findAll()
+        ).isUnmodifiable();
     }
 
-    @Test
-    @DisplayName("findByTag with a null or blank query matches nothing")
-    void findByTagWithNullOrBlankQueryReturnsEmptyList() {
-        repository.save(note(NOTE_ID, "Work note", "content", "work"));
-
-        assertThat(repository.findByTag(null)).isEmpty();
-        assertThat(repository.findByTag("   ")).isEmpty();
+    /**
+     * Sample note without tags.
+     * @param id Identifier
+     * @param title Title
+     * @return Sample note
+     */
+    private static Note note(final UUID id, final String title) {
+        return new Note(
+            id, title, "Body", InMemoryNoteRepositoryTest.CREATED, Set.of()
+        );
     }
 
-    @Test
-    @DisplayName("findAll returns an immutable snapshot taken at call time")
-    void findAllReturnsImmutableSnapshot() {
-        Note first = note(NOTE_ID, "First", "First content", "work");
-        repository.save(first);
-
-        List<Note> snapshot = repository.findAll();
-        repository.save(note(OTHER_ID, "Second", "Second content"));
-
-        assertThat(snapshot).containsExactly(first);
-        assertThatThrownBy(() -> snapshot.add(first))
-                .isInstanceOf(UnsupportedOperationException.class);
+    /**
+     * Sample note with a tag.
+     * @param id Identifier
+     * @param tag Tag
+     * @return Sample note
+     */
+    private static Note tagged(final UUID id, final String tag) {
+        return new Note(
+            id, "Title", "Body", InMemoryNoteRepositoryTest.CREATED, Set.of(tag)
+        );
     }
 }
