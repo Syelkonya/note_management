@@ -203,6 +203,33 @@
                     </plugins>
                 </configuration>
             </plugin>
+
+            <!--
+              Qulice 0.26.0 is the JDK-17-compatible release. It is
+              deliberately not bound to the build lifecycle: run it
+              explicitly with
+                mvn com.qulice:qulice-maven-plugin:0.26.0:check
+              The exclusions below silence dependency-analyzer false
+              positives that are inherent to Spring Boot starters (their
+              transitive dependencies are reachable only through the
+              starter POMs) and to Lombok (a source-only annotation
+              processor, so no bytecode reference to it exists).
+            -->
+            <plugin>
+                <groupId>com.qulice</groupId>
+                <artifactId>qulice-maven-plugin</artifactId>
+                <version>0.26.0</version>
+                <configuration>
+                    <excludes>
+                        <exclude>dependencies:org.springframework</exclude>
+                        <exclude>dependencies:org.assertj</exclude>
+                        <exclude>dependencies:org.junit.jupiter</exclude>
+                        <exclude>dependencies:org.mockito</exclude>
+                        <exclude>dependencies:jakarta.validation</exclude>
+                        <exclude>dependencies:org.projectlombok</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

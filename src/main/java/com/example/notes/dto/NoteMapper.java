@@ -1,29 +1,29 @@
+/*
+ * Notes service.
+ */
 package com.example.notes.dto;
 
+import com.example.notes.model.Note;
 import java.util.List;
 
-import com.example.notes.model.Note;
-
-import lombok.experimental.UtilityClass;
-
 /**
- * Maps domain {@link Note} objects to transport DTOs.
+ * Maps domain notes to transport objects.
+ *
+ * @since 1.0
  */
-@UtilityClass
-public class NoteMapper {
+public interface NoteMapper {
 
-    public static NoteResponse toResponse(Note note) {
-        return new NoteResponse(
-                note.id(),
-                note.title(),
-                note.content(),
-                note.createdAt(),
-                note.tags());
-    }
+    /**
+     * Map a single note.
+     * @param note Domain note
+     * @return Transport representation
+     */
+    NoteResponse toResponse(Note note);
 
-    public static List<NoteResponse> toResponse(List<Note> notes) {
-        return notes.stream()
-                .map(NoteMapper::toResponse)
-                .toList();
-    }
+    /**
+     * Map a collection of notes.
+     * @param notes Domain notes
+     * @return Transport representations
+     */
+    List<NoteResponse> toResponses(List<Note> notes);
 }

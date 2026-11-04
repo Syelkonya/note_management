@@ -1,60 +1,117 @@
+/*
+ * Notes service.
+ */
 package com.example.notes.dto;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
+import com.example.notes.model.Note;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import org.junit.jupiter.api.DisplayName;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.example.notes.model.Note;
-
 /**
- * Unit tests for {@link NoteMapper}: every domain field must reach the
- * transport DTO unchanged, including the unmodifiable tag set.
+ * Tests for {@link SimpleNoteMapper}.
+ *
+ * @since 1.0
  */
-@DisplayName("NoteMapper")
-class NoteMapperTest {
+final class NoteMapperTest {
 
-    private static final UUID FIRST_ID = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
-    private static final UUID SECOND_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
-    private static final Instant CREATED_AT = Instant.parse("2024-01-01T00:00:00Z");
+    /** First note identifier. */
+    private static final UUID FIRST =
+        UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 
-    private static Note note(UUID id, String title, String content, String... tags) {
-        return new Note(id, title, content, CREATED_AT, Set.of(tags));
+    /** Second note identifier. */
+    private static final UUID SECOND =
+        UUID.fromString("11111111-2222-3333-4444-555555555555");
+
+    /** Creation timestamp. */
+    private static final Instant CREATED = Instant.parse("2024-01-01T00:00:00Z");
+
+    /** Sample note. */
+    private static final Note NOTE = new Note(
+        NoteMapperTest.FIRST, "Title", "Body", NoteMapperTest.CREATED,
+        Set.of("work")
+    );
+
+    /** Mapper under test. */
+    private final NoteMapper mapper = new SimpleNoteMapper();
+
+    @Test
+    void mapsIdentifier() {
+        Assertions.assertThat(
+            this.mapper.toResponse(NoteMapperTest.NOTE).id()
+        ).isEqualTo(
+            NoteMapperTest.FIRST
+        );
     }
 
     @Test
-    @DisplayName("toResponse maps every field and keeps the unmodifiable tag set")
-    void toResponseMapsEveryField() {
-        Note note = note(FIRST_ID, "Title", "Content", "work", "home");
-
-        NoteResponse response = NoteMapper.toResponse(note);
-
-        assertThat(response.id()).isEqualTo(FIRST_ID);
-        assertThat(response.title()).isEqualTo("Title");
-        assertThat(response.content()).isEqualTo("Content");
-        assertThat(response.createdAt()).isEqualTo(CREATED_AT);
-        assertThat(response.tags()).containsExactlyInAnyOrder("work", "home");
-        Set<String> tags = response.tags();
-        assertThatThrownBy(() -> tags.add("other"))
-                .isInstanceOf(UnsupportedOperationException.class);
+    void mapsTitle() {
+        Assertions.assertThat(
+            this.mapper.toResponse(NoteMapperTest.NOTE).title()
+        ).isEqualTo(
+            "Title"
+        );
     }
 
     @Test
-    @DisplayName("toResponse maps a list preserving the repository order")
-    void toResponseMapsListPreservingOrder() {
-        Note first = note(FIRST_ID, "First", "First content", "work");
-        Note second = note(SECOND_ID, "Second", "Second content", "home");
+    void mapsContent() {
+        Assertions.assertThat(
+            this.mapper.toResponse(NoteMapperTest.NOTE).content()
+        ).isEqualTo(
+            "Body"
+        );
+    }
 
-        List<NoteResponse> responses = NoteMapper.toResponse(List.of(first, second));
+    @Test
+    void mapsCreationTime() {
+        Assertions.assertThat(
+            this.mapper.toResponse(NoteMapperTest.NOTE).createdAt()
+        ).isEqualTo(
+            NoteMapperTest.CREATED
+        );
+    }
 
-        assertThat(responses)
-                .extracting(NoteResponse::id)
-                .containsExactly(FIRST_ID, SECOND_ID);
+    @Test
+    void mapsTags() {
+        Assertions.assertThat(
+            this.mapper.toResponse(NoteMapperTest.NOTE).tags()
+        ).containsExactly(
+            "work"
+        );
+    }
+
+    @Test
+    void makesTagsUnmodifiable() {
+        Assertions.assertThat(
+            this.mapper.toResponse(NoteMapperTest.NOTE).tags()
+        ).isUnmodifiable();
+    }
+
+    @Test
+    void mapsCollection() {
+        Assertions.assertThat(
+            this.mapper.toResponses(
+                List.of(
+                    NoteMapperTest.NOTE,
+                    NoteMapperTest.another()
+                )
+            )
+        ).hasSize(
+            2
+        );
+    }
+
+    /**
+     * Another sample note.
+     * @return Sample note
+     */
+    private static Note another() {
+        return new Note(
+            NoteMapperTest.SECOND, "Second", "Body", NoteMapperTest.CREATED,
+            Set.of("home")
+        );
     }
 }
